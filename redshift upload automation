@@ -1,0 +1,137 @@
+import psycopg2
+import boto3
+def main_redshift_creds(current_query,fetch,username, password):
+      conn_string = "host='wweredshift-encrypt-prod.clrnkefsqqbr.us-east-1.redshift.amazonaws.com' port='5439' dbname='entdw' user='"+ username + "' password = '"+ password + "' connect_timeout=30000"
+      conn = psycopg2.connect(conn_string)
+      conn.autocommit=True
+      cursor = conn.cursor()
+      cursor.execute(current_query)
+
+      if fetch==1:
+          records=cursor.fetchall()
+          conn.commit()
+          return records
+        # retrieve the records from the database
+      cursor.close()
+      conn.close()
+    
+def upload_data_to_redshift_creds(filename, tablename,username, password):
+       print ('Creating S3 Connection')
+       s3 = boto3.resource('s3')
+       print ('Copying local file to S3')
+       data = open(filename, 'rb')
+       s3.Bucket('sem-edw-delta-us-east-1-dasandbox-1798v4fl8p').put_object(Key='avenkata/staging/temp_x', Body=data,ServerSideEncryption='AES256')
+       print ('Local to S3 Transfer successful')
+       
+       main_redshift_creds( "COPY "+ str(tablename)+ "  FROM   's3://sem-edw-delta-us-east-1-dasandbox-1798v4fl8p/avenkata/staging/temp_x' iam_role 'arn:aws:iam::213320149843:role/Redshift-DA-Copy-Unload' delimiter as ',' escape removequotes ACCEPTINVCHARS; ",0,username,password)
+
+
+       s3.Bucket('sem-edw-delta-us-east-1-dasandbox-1798v4fl8p').delete_objects(
+          Delete={
+             'Objects': [
+                 {
+                     'Key': 'avenkata/staging/temp_x',
+
+                 },
+             ],
+
+         }
+         )
+       print ('Staging File Deleted')
+       
+import os
+os.chdir('Z:\EXL_Reporting\Abhiman Acharya\steven_sas')
+print(os.getcwd())
+
+import pandas as pd
+def upload_csv():
+      print("Start uploading")
+      data = pd.read_csv("daily_mlbam_apple.csv")
+
+      data.fillna(0,inplace=True)
+      data['bill_date'] = pd.to_datetime(data['bill_date'],format='%d%b%Y').apply(lambda x: x.strftime('%Y-%m-%d'))
+
+      data['end_of_month'] = pd.to_datetime(data['end_of_month'],format='%d%b%Y').apply(lambda x: x.strftime('%Y-%m-%d'))
+      data['forecast_date'] = pd.to_datetime(data['forecast_date'],format='%d%b%Y').apply(lambda x: x.strftime('%Y-%m-%d'))
+      data.to_csv('daily_mlbam_apple_mod.csv',index=False, header =False)
+      
+
+      main_redshift_creds('delete from busgrp.sh_file_need_rs_121018;',0,'yzheng', 'Yzheng111')
+      print("Create table structure.")
+
+      upload_data_to_redshift_creds('daily_mlbam_apple_mod.csv', 'busgrp.sh_file_need_rs_121018','yzheng', 'Yzheng111')
+      main_redshift_creds('grant all on busgrp.sh_file_need_rs_121018 to public;',0,'yzheng', 'Yzheng111')
+
+
+upload_csv()
+
+
+#####
+#####
+#####
+
+
+import psycopg2
+import boto3
+def main_redshift_creds(current_query,fetch,username, password):
+      conn_string = "host='wweredshift-encrypt-prod.clrnkefsqqbr.us-east-1.redshift.amazonaws.com' port='5439' dbname='entdw' user='"+ username + "' password = '"+ password + "' connect_timeout=30000"
+      conn = psycopg2.connect(conn_string)
+      conn.autocommit=True
+      cursor = conn.cursor()
+      cursor.execute(current_query)
+
+      if fetch==1:
+          records=cursor.fetchall()
+          conn.commit()
+          return records
+        # retrieve the records from the database
+      cursor.close()
+      conn.close()
+    
+def upload_data_to_redshift_creds(filename, tablename,username, password):
+       print ('Creating S3 Connection')
+       s3 = boto3.resource('s3')
+       print ('Copying local file to S3')
+       data = open(filename, 'rb')
+       s3.Bucket('sem-edw-delta-us-east-1-dasandbox-1798v4fl8p').put_object(Key='avenkata/staging/temp_x', Body=data,ServerSideEncryption='AES256')
+       print ('Local to S3 Transfer successful')
+       
+       main_redshift_creds( "COPY "+ str(tablename)+ "  FROM   's3://sem-edw-delta-us-east-1-dasandbox-1798v4fl8p/avenkata/staging/temp_x' iam_role 'arn:aws:iam::213320149843:role/Redshift-DA-Copy-Unload' delimiter as ',' escape removequotes ACCEPTINVCHARS; ",0,username,password)
+
+
+       s3.Bucket('sem-edw-delta-us-east-1-dasandbox-1798v4fl8p').delete_objects(
+          Delete={
+             'Objects': [
+                 {
+                     'Key': 'avenkata/staging/temp_x',
+
+                 },
+             ],
+
+         }
+         )
+       print ('Staging File Deleted')
+       
+import os
+os.chdir('Z:\EXL_Reporting\Abhiman Acharya\steven_sas')
+print(os.getcwd())
+
+import pandas as pd
+def upload_csv():
+      print("Start uploading")
+      data = pd.read_csv("MTD_Data.csv")
+
+      data.fillna(0,inplace=True)
+      data['run_date'] = pd.to_datetime(data['run_date'],format='%d%b%Y').apply(lambda x: x.strftime('%Y-%m-%d'))
+      data['forecast_date'] = pd.to_datetime(data['forecast_date'],format='%d%b%Y').apply(lambda x: x.strftime('%Y-%m-%d'))
+      data.to_csv('sh_file_need_mtddata_mod.csv',index=False, header =False)
+      
+
+      main_redshift_creds('delete from busgrp.sh_file_need_mtddata;',0,'yzheng', 'Yzheng111')
+      print("Create table structure.")
+
+      upload_data_to_redshift_creds('sh_file_need_mtddata_mod.csv', 'busgrp.sh_file_need_mtddata','yzheng', 'Yzheng111')
+      main_redshift_creds('grant all on busgrp.sh_file_need_mtddata to public;',0,'yzheng', 'Yzheng111')
+
+
+upload_csv()
