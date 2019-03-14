@@ -4,12 +4,12 @@ import sqlalchemy as sa
 import pandas as pd
 import boto3
 
-Database = "entdw"
-User = "schandramowly"
-Pswd = "r6chaxA*8uZeTh"
-Host = "wweredshift-encrypt-prod.clrnkefsqqbr.us-east-1.redshift.amazonaws.com"
-Port = "5439"
-Schema = "public"
+Database = ""
+User = ""
+Pswd = ""
+Host = ""
+Port = ""
+Schema = ""
 
 connection_string = "postgresql+psycopg2://%s:%s@%s:%s/%s" % (User,Pswd,Host,str(Port),Database)
 
@@ -23,7 +23,7 @@ output = [table for table in table_names if (table[0]=='y')]
 print(output)
 
 # Begin Querying
-stmt = 'select top 10* from youtubeapi_video_metadata_full'
+stmt = 'select top 10* from XXX'
 result_proxy = engine.execute(stmt) # returns set
 results = result_proxy.fetchall()
 print(results)
